@@ -11,7 +11,7 @@ namespace Grafica_PDesktop
 {
     class Cara
     {
-        //Punto == Vertice
+       
         float rotarEjeY;
 
         public List<Vertice> Vertices;
@@ -49,7 +49,7 @@ namespace Grafica_PDesktop
             GL.Begin(PrimitiveType.Polygon);
             GL.Color4(color);
 
-         //   Rotar(rotarEjeY, "y");
+//           Rotar(rotarEjeY, "y");
 
             foreach (var vertice in Vertices)
             {

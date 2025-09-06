@@ -18,6 +18,7 @@ namespace Grafica_PDesktop
         {
             listaDePoligonos = new Dictionary<string, Cara>();
             this.color = new Color4(0, 0, 0, 0);
+            centro = new Vertice(0f,0f,0f);
         }
 
         public void add(String nombre, Cara poligono)
@@ -41,21 +42,34 @@ namespace Grafica_PDesktop
             listaDePoligonos[nombre].setColor(this.color);
         }
 
-        //centro de masa
+        
         public void setCentro(Vertice centro)
         {
             this.centro = centro;
-            foreach (Cara poligono in listaDePoligonos.Values)
+          /*  foreach (Cara poligono in listaDePoligonos.Values)
             {
                 poligono.setCentro(centro);
-            }
+            }*/
         }
 
-        public void dibujarPoligono(Vector3 centro)
+        /*  public void dibujarPoligono(Vector3 centro)
+          {
+              foreach (Cara poligono in listaDePoligonos.Values)
+              {
+                  poligono.Dibujar(centro);
+              }
+          }*/
+        public void dibujarPoligono(Vector3 centroSuperior)
         {
+            Vector3 centroParte = new Vector3(
+                centroSuperior.X + this.centro.x,
+                centroSuperior.Y + this.centro.y,
+                centroSuperior.Z + this.centro.z
+            );
+
             foreach (Cara poligono in listaDePoligonos.Values)
             {
-                poligono.Dibujar(centro);
+                poligono?.Dibujar(centroParte);
             }
         }
 

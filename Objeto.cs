@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using OpenTK;
 using OpenTK.Graphics;
 
@@ -14,11 +11,12 @@ namespace Grafica_PDesktop
         public Dictionary<String, Partes> listaDePartes;
         public Color4 color;
         public Vertice centro;
-        public int timer = 0;
+      //  public int timer = 0;
         public Objeto()
         {
             this.listaDePartes = new Dictionary<String, Partes>();
             this.color = new Color4(0, 0, 0, 0);
+            centro = new Vertice(0f,0f,0f);
         }
 
         public void addParte(String nombre, Partes nuevaParte)
@@ -36,11 +34,26 @@ namespace Grafica_PDesktop
             return this.listaDePartes[nombre];
         }
 
-        public void dibujarParte(Vector3 centro)
+        /* public void dibujarParte(Vector3 centro)
+         {
+             foreach (Partes partes in listaDePartes.Values)
+             {
+                 partes.dibujarPoligono(centro);
+             }
+         }*/
+
+        public void dibujarParte(Vector3 centroSuperior)
         {
+            // Acumula el centro del OBJETO al centro del nivel superior (escenario)
+            Vector3 centroObjeto = new Vector3(
+                centroSuperior.X + this.centro.x,
+                centroSuperior.Y + this.centro.y,
+                centroSuperior.Z + this.centro.z
+            );
+
             foreach (Partes partes in listaDePartes.Values)
             {
-                partes.dibujarPoligono(centro);
+                partes?.dibujarPoligono(centroObjeto);
             }
         }
 
@@ -53,10 +66,10 @@ namespace Grafica_PDesktop
         public void setCentro(Vertice centro)
         {
             this.centro = centro;
-            foreach (Partes parteActual in listaDePartes.Values)
+          /*  foreach (Partes parteActual in listaDePartes.Values)
             {
                 parteActual.setCentro(centro);
-            }
+            }*/
         }
 
 
