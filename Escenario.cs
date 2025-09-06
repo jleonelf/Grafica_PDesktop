@@ -40,11 +40,21 @@ namespace Grafica_PDesktop
 
         public void dibujar(Vector3 centro)
         {
+             
             foreach (Objeto objetoActual in this.listaDeObjetos.Values)
             {
                 objetoActual.dibujarParte(centro);
             }
         }
+
+        public void dibujar(Vector3 offset, Vector3 rot, Vector3 scale) 
+        {
+            foreach (var objetoActual in this.listaDeObjetos.Values)
+                objetoActual.dibujarParte(offset,rot,scale);
+        
+        }
+
+
 
     }
 }

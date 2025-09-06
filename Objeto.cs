@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using OpenTK;
 using OpenTK.Graphics;
 
@@ -14,11 +11,16 @@ namespace Grafica_PDesktop
         public Dictionary<String, Partes> listaDePartes;
         public Color4 color;
         public Vertice centro;
-        public int timer = 0;
+
+        public Vector3 rot = Vector3.Zero;   // grados (x,y,z)
+        public Vector3 scale = Vector3.One;  // escala local (x,y,z)
+
+        //  public int timer = 0;
         public Objeto()
         {
             this.listaDePartes = new Dictionary<String, Partes>();
             this.color = new Color4(0, 0, 0, 0);
+            centro = new Vertice(0f,0f,0f);
         }
 
         public void addParte(String nombre, Partes nuevaParte)
@@ -35,15 +37,6 @@ namespace Grafica_PDesktop
         {
             return this.listaDePartes[nombre];
         }
-
-        public void dibujarParte(Vector3 centro)
-        {
-            foreach (Partes partes in listaDePartes.Values)
-            {
-                partes.dibujarPoligono(centro);
-            }
-        }
-
         public void setColor(String parte, String poligono, Color4 color)
         {
             this.color = color;
@@ -53,10 +46,36 @@ namespace Grafica_PDesktop
         public void setCentro(Vertice centro)
         {
             this.centro = centro;
-            foreach (Partes parteActual in listaDePartes.Values)
+    
+        }
+
+        public void setRot(float rx, float ry, float rz) 
+        {
+            rot = new Vector3(rx, ry, rz);
+        }
+
+        public void setScale(float sx, float sy, float sz) 
+        {
+            scale = new Vector3(sx, sy, sz);
+        }
+
+        public void dibujarParte(Vector3 centroEsc)
+        {
+            var centroObjeto = centroEsc + new Vector3(centro.x, centro.y, centro.z);
+            foreach (Partes partes in listaDePartes.Values)
             {
-                parteActual.setCentro(centro);
+                partes.dibujarPoligono(centroObjeto);
             }
+        }
+
+        public void dibujarParte(Vector3 t, Vector3 r, Vector3 s)
+        {
+            var tObj = t + new Vector3(centro.x, centro.y, centro.z);
+            var rObj = r + rot;
+            var sObj = new Vector3(s.X * scale.X, s.Y * scale.Y, s.Z * scale.Z);
+
+            foreach (var partes in listaDePartes.Values)
+                partes.dibujarPoligono(tObj, rObj, sObj);
         }
 
 

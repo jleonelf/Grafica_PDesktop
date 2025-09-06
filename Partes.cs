@@ -14,10 +14,15 @@ namespace Grafica_PDesktop
         public Color4 color;
         public Vertice centro;
 
+        public Vector3 rot = Vector3.Zero;
+        public Vector3 scale = Vector3.One;
+
+
         public Partes()
         {
             listaDePoligonos = new Dictionary<string, Cara>();
             this.color = new Color4(0, 0, 0, 0);
+            centro = new Vertice(0f,0f,0f);
         }
 
         public void add(String nombre, Cara poligono)
@@ -41,25 +46,41 @@ namespace Grafica_PDesktop
             listaDePoligonos[nombre].setColor(this.color);
         }
 
-        //centro de masa
+        
         public void setCentro(Vertice centro)
         {
             this.centro = centro;
-            foreach (Cara poligono in listaDePoligonos.Values)
-            {
-                poligono.setCentro(centro);
-            }
+          
         }
 
-        public void dibujarPoligono(Vector3 centro)
+        public void setRot(float rx, float ry, float rz) 
         {
-            foreach (Cara poligono in listaDePoligonos.Values)
-            {
-                poligono.Dibujar(centro);
-            }
+            rot = new Vector3(rx, ry, rz);
         }
 
+        public void setScale(float sx, float sy, float sz)
+        {
+            scale = new Vector3(sx, sy, sz);
+        }     
+            
+        public void dibujarPoligono(Vector3 centroObj)
+        {
+            var centroParte = centroObj + new Vector3(centro.x,centro.y,centro.z);
+              foreach (Cara poligono in listaDePoligonos.Values)
+              {
+                  poligono.Dibujar(centroParte);
+              }
+        }
 
+        public void dibujarPoligono(Vector3 t, Vector3 r, Vector3 s)
+        {
+            var tParte = t + new Vector3(centro.x, centro.y, centro.z);
+            var rParte = r + rot;
+            var sParte = new Vector3(s.X * scale.X, s.Y * scale.Y, s.Z * scale.Z);
+
+            foreach (var cara in listaDePoligonos.Values)
+                cara.Dibujar(tParte, rParte, sParte);
+        }
 
     }
 }
