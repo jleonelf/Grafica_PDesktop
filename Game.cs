@@ -3,6 +3,7 @@ using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
 using System.IO;
+using OpenTK.Input;
 
 namespace Grafica_PDesktop
 {
@@ -14,26 +15,28 @@ namespace Grafica_PDesktop
         private Objeto teclado;
         private Objeto cpu;
 
-        private Vector3 escenaOffset = Vector3.Zero;     // traslación global
-        private Vector3 escenaRot = Vector3.Zero;     // rotación global (grados)
+        private Vector3 escenaOffset = Vector3.Zero;     
+        private Vector3 escenaRot = Vector3.Zero;     
         private Vector3 escenaScale = Vector3.One;
 
-        private float angMonitor = 0f;   // grados
-        private float angBase = 0f;  // grados
-        
 
+        enum ModoEdicion{ Escenario, Objeto, Parte  }
+        enum TipoTransformacion { Translacion, Rotacion, Escala,Reflexion }
+
+        private bool reflX = false, reflY = false, reflZ = false;
+        private KeyboardState prevKb; 
 
         public Game(int width, int height)
             : base(width, height, GraphicsMode.Default, "Pc")
         {
-           escenario = InicializarPc();
-           //const string archivo = "escenario.json";
+        //  escenario = InicializarPc();
+          const string archivo = "escenario.json";
 
-          //  Serializador.SerializarObjeto(escenario, archivo);
+         // Serializador.SerializarObjeto(escenario, archivo);
 
-           // escenario = Serializador.DeserializarObjeto<Escenario>(archivo);
+           escenario = Serializador.DeserializarObjeto<Escenario>(archivo);
 
-           // File.Delete(archivo);
+         // File.Delete(archivo);
 
 
         }
@@ -47,7 +50,7 @@ namespace Grafica_PDesktop
             Color4 cTopClaro = new Color4(0.78f, 0.78f, 0.78f, 1f);
             Color4 cLateralO = new Color4(0.60f, 0.60f, 0.60f, 1f);
 
-            this.escenario = new Escenario(new Vector3(0, 0, 0));
+            this.escenario = new Escenario(new Vertice(0, 0, 0));
 
 
             // ==========================================================
@@ -393,28 +396,30 @@ namespace Grafica_PDesktop
             // Coloca la CPU en el mundo (antes: 4.1, 1.05, -6.0)
             this.cpu.setCentro(new Vertice(4.1f, 1.05f, -6.0f));
             this.escenario.addObjeto("CPU", this.cpu);
-
+            var c = escenario.CalcularCentroideObjetos();
+            escenario.setCentro(c);
             return escenario;
 
         }
-         //*/
+        //*/
+
+
+        ModoEdicion modoActual = ModoEdicion.Objeto;
+        TipoTransformacion transformacionActual = TipoTransformacion.Translacion;
+        string objetoSeleccionado = "Monitor";
+        string parteSeleccionada = "Monitor_Panel";
+        float velT = 0.6f;
+        float velR = 3f;
+        float velS = 0.05f;
+
+        static float Clamp(float v, float min, float max) =>(v < min) ? min : (v > max ? max : v) ;
 
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
             GL.ClearColor(1f, 1f, 1f, 1f);
             GL.Enable(EnableCap.DepthTest);
-
-            //mover
-            // escenario.getObjeto("CPU").setCentro(new Vertice(1.0f,1.05f,-6.0f));
-            // escenario.getObjeto("Monitor").getParte("Monitor_Base").setCentro(new Vertice(0f,-2.2f,+0.50f));
-
-            //escalar
-            // escenaScale = new Vector3(0.9f,0.9f,0.9f);
-            // escenario.getObjeto("Monitor").setScale(0.7f, 0.7f, 0.7f);
-
-            //reflexion
-            //escenaScale = new Vector3(1f,-1f,1f);
+ 
         }
 
         protected override void OnResize(EventArgs e)
@@ -455,25 +460,263 @@ namespace Grafica_PDesktop
         {
             base.OnUpdateFrame(e);
 
-            
-            angMonitor = (angMonitor - 90f * (float)e.Time) % 360f;
-            angBase = (angBase + 30f * (float)e.Time) % 360f;
+            var k = Keyboard.GetState();
 
+            //=====Cambiar Modo de edicion (Nievl de transformacion)
+            if (k[Key.Number1]) modoActual = ModoEdicion.Escenario;
+            else if (k[Key.Number2]) modoActual = ModoEdicion.Objeto;
+            else if (k[Key.Number3]) modoActual = ModoEdicion.Parte;
 
-            // escenario.getObjeto("Monitor").setRot(0f, angMonitor, 0f);
+            //====Cambiar tipo de transformacion
+            if (k[Key.T]) transformacionActual = TipoTransformacion.Translacion;
+            else if (k[Key.R]) transformacionActual = TipoTransformacion.Rotacion;
+            else if (k[Key.E]) transformacionActual = TipoTransformacion.Escala;
+            else if (k[Key.L]) transformacionActual = TipoTransformacion.Reflexion;
 
-            // rota alrededor del eje Y de la base
-            // escenario.getObjeto("Monitor").getParte("Monitor_Base").setRot(angMonitor, angBase, 0f  );
+            //====Seleccionar Objeto
+            if (k[Key.F1]) { objetoSeleccionado = "Monitor"; }
+            else if (k[Key.F2]) { objetoSeleccionado = "Teclado"; }
+            else if (k[Key.F3]) { objetoSeleccionado = "CPU"; }
 
+            //====Seleccionar Parte
+            if (objetoSeleccionado == "Monitor")
+            {
+                if (k[Key.F4]) parteSeleccionada = "Monitor_Panel";
+                else if (k[Key.F5]) parteSeleccionada = "Monitor_Cuello";
+                else if (k[Key.F6]) parteSeleccionada = "Monitor_Base";
+            }
+            else if (objetoSeleccionado == "Teclado")
+            {
+                if (k[Key.F4]) parteSeleccionada = "Teclado";
+            }
+            else if (objetoSeleccionado == "CPU") 
+            {
+                if (k[Key.F4]) parteSeleccionada = "CPU";
+            }
 
-              foreach (var obj in escenario.listaDeObjetos.Values)
-                 obj.setRot(0f, angBase, 0f);
+            //=====APLICAR LA TRASNFORMACION AL MODO ACTUAL
+            switch (modoActual)
+            {
+                case ModoEdicion.Escenario:
+                    AplicarTransformacionEscenario(k);
+                    break;
 
-            // escenario.getObjeto("CPU").setRot( 0f,0f,angBase);
-           
-           // float dt = (float)e.Time;
-           // escenaRot.Y = (escenaRot.Y + 15f * dt) % 360f;
+                case ModoEdicion.Objeto:
+                    AplicarTransformacionObjeto(k);
+                    break;
+
+                case ModoEdicion.Parte:
+                    AplicarTransformacionParte(k);
+                    break;
+            }
+
+            if (transformacionActual == TipoTransformacion.Reflexion)
+            {
+                if (k.IsKeyDown(Key.I) && !prevKb.IsKeyDown(Key.I)) { reflX = !reflX; }
+                if (k.IsKeyDown(Key.O) && !prevKb.IsKeyDown(Key.O)) { reflY = !reflY; }
+                if (k.IsKeyDown(Key.P) && !prevKb.IsKeyDown(Key.P)) { reflZ = !reflZ; }
+            }
+            prevKb = k;
+
         }
+
+        private void AplicarTransformacionEscenario(KeyboardState k) 
+        {
+            switch (transformacionActual) 
+            {
+                case TipoTransformacion.Translacion:
+                    if (k[Key.Up]) escenaOffset.Y += velT;
+                    if (k[Key.Down]) escenaOffset.Y -= velT;
+                    if (k[Key.Left]) escenaOffset.X -= velT;
+                    if (k[Key.Right]) escenaOffset.X += velT;
+                    if (k[Key.PageUp]) escenaOffset.Z += velT;
+                    if (k[Key.PageDown]) escenaOffset.Z -= velT;
+                    break;
+
+                case TipoTransformacion.Rotacion:
+                    if (k[Key.Up]) escenaRot.X += velR;
+                    if (k[Key.Down]) escenaRot.X -= velR;
+                    if (k[Key.Left]) escenaRot.Y += velR;
+                    if (k[Key.Right]) escenaRot.Y -= velR;
+                    if (k[Key.PageUp]) escenaRot.Z += velR;
+                    if (k[Key.PageDown]) escenaRot.Z -= velR;
+                    break;
+
+                case TipoTransformacion.Escala:
+                    if (k[Key.Plus] || k[Key.KeypadPlus])
+                    {
+                        escenaScale.X += velS;
+                        escenaScale.Y += velS;
+                        escenaScale.Z += velS;
+
+                    }
+                    if (k[Key.Minus] || k[Key.KeypadMinus]) 
+                    {
+                        escenaScale.X -= velS;
+                        escenaScale.Y -= velS;
+                        escenaScale.Z -= velS;
+
+                    }
+
+                    // Por eje
+                    if (k[Key.X]) escenaScale.X += velS;
+                    if (k[Key.Y]) escenaScale.Y += velS;
+                    if (k[Key.Z]) escenaScale.Z += velS;
+
+                    escenaScale.X = Clamp(escenaScale.X, 0.1f, 5f);
+                    escenaScale.Y = Clamp(escenaScale.Y, 0.1f, 5f);
+                    escenaScale.Z = Clamp(escenaScale.Z, 0.1f, 5f);
+
+                    break;
+
+                case TipoTransformacion.Reflexion:
+                    if (escenario?.listaDeObjetos == null) break;
+                    foreach (var kvObj in escenario.listaDeObjetos)
+                    {
+                        var obj = kvObj.Value;
+                        if (obj?.listaDePartes == null) continue;
+                        foreach (var kvPar in obj.listaDePartes)
+                        {
+                            var parte = kvPar.Value;
+                            if (parte?.listaDePoligonos == null) continue;
+                            foreach (var kvCara in parte.listaDePoligonos)
+                            {
+                                var cara = kvCara.Value;
+                                if (cara == null) continue;
+                                cara.reflectX = reflX;
+                                cara.reflectY = reflY;
+                                cara.reflectZ = reflZ;
+                            }
+                        }
+                    }
+                    break;
+
+            }
+        }
+
+        private void AplicarTransformacionObjeto(KeyboardState k) 
+        {
+            var obj = escenario.getObjeto(objetoSeleccionado);
+            if (obj == null) return;
+            switch (transformacionActual)
+            {
+                case TipoTransformacion.Translacion:
+                    var c = obj.centro;
+                    if (k[Key.Up]) c.y += velT;
+                    if (k[Key.Down]) c.y -= velT;
+                    if (k[Key.Left]) c.x -= velT;
+                    if (k[Key.Right]) c.x += velT;
+                    if (k[Key.PageUp]) c.z += velT;
+                    if (k[Key.PageDown]) c.z -= velT;
+                    obj.setCentro(new Vertice(c.x, c.y, c.z));
+                    break;
+
+                case TipoTransformacion.Rotacion:
+                    var r = obj.rot;
+                    if (k[Key.Up]) r.X += velR;
+                    if (k[Key.Down]) r.X -= velR;
+                    if (k[Key.Left]) r.Y += velR;
+                    if (k[Key.Right]) r.Y -= velR;
+                    if (k[Key.PageUp]) r.Z += velR;
+                    if (k[Key.PageDown]) r.Z -= velR;
+                    obj.setRot(r.X, r.Y, r.Z);
+                    break;
+
+                case TipoTransformacion.Escala:
+                    var s = obj.scale;
+                    if (k[Key.Plus] || k[Key.KeypadPlus]) { s.X += velS; s.Y += velS; s.Z += velS; }
+                    if (k[Key.Minus] || k[Key.KeypadMinus]) { s.X -= velS; s.Y -= velS; s.Z -= velS; }
+                    if (k[Key.X]) s.X += velS;
+                    if (k[Key.Y]) s.Y += velS;
+                    if (k[Key.Z]) s.Z += velS;
+                    s.X = Clamp(s.X, 0.1f, 5f); s.Y = Clamp(s.Y, 0.1f, 5f); s.Z = Clamp(s.Z, 0.1f, 5f);
+                    obj.setScale(s.X, s.Y, s.Z);
+                    break;
+
+                case TipoTransformacion.Reflexion:
+                    if (obj.listaDePartes == null) break;
+                    foreach (var kvPar in obj.listaDePartes)
+                    {
+                        var parte = kvPar.Value;
+                        if (parte?.listaDePoligonos == null) continue;
+                        foreach (var kvCara in parte.listaDePoligonos)
+                        {
+                            var cara = kvCara.Value;
+                            if (cara == null) continue;
+                            cara.reflectX = reflX;
+                            cara.reflectY = reflY;
+                            cara.reflectZ = reflZ;
+                        }
+                    }
+                    break;
+
+
+            }
+
+
+
+        }
+        private void AplicarTransformacionParte(KeyboardState k) 
+        {
+            var obj = escenario.getObjeto(objetoSeleccionado);
+            if (obj == null) return;
+            var parte = obj.getParte(parteSeleccionada);
+            if (parte == null) return;
+
+            switch (transformacionActual)
+            {
+                case TipoTransformacion.Translacion:
+                    var c = parte.centro;
+                    if (k[Key.Up]) c.y += velT;
+                    if (k[Key.Down]) c.y -= velT;
+                    if (k[Key.Left]) c.x -= velT;
+                    if (k[Key.Right]) c.x += velT;
+                    if (k[Key.PageUp]) c.z += velT;
+                    if (k[Key.PageDown]) c.z -= velT;
+                    parte.setCentro(new Vertice(c.x, c.y, c.z));
+                    break;
+
+                case TipoTransformacion.Rotacion:
+                    var r = parte.rot;
+                    if (k[Key.Up]) r.X += velR;
+                    if (k[Key.Down]) r.X -= velR;
+                    if (k[Key.Left]) r.Y += velR;
+                    if (k[Key.Right]) r.Y -= velR;
+                    if (k[Key.PageUp]) r.Z += velR;
+                    if (k[Key.PageDown]) r.Z -= velR;
+                    parte.setRot(r.X, r.Y, r.Z);
+                    break;
+
+                case TipoTransformacion.Escala:
+                    var s = parte.scale;
+                    if (k[Key.Plus] || k[Key.KeypadPlus]) { s.X += velS; s.Y += velS; s.Z += velS; }
+                    if (k[Key.Minus] || k[Key.KeypadMinus]) { s.X -= velS; s.Y -= velS; s.Z -= velS; }
+                    if (k[Key.X]) s.X += velS;
+                    if (k[Key.Y]) s.Y += velS;
+                    if (k[Key.Z]) s.Z += velS;
+                    s.X = Clamp(s.X, 0.1f, 5f); s.Y = Clamp(s.Y, 0.1f, 5f); s.Z = Clamp(s.Z, 0.1f, 5f);
+                    parte.setScale(s.X, s.Y, s.Z);
+                    break;
+
+                case TipoTransformacion.Reflexion:
+                    if (parte.listaDePoligonos == null) break;
+                    foreach (var kvCara in parte.listaDePoligonos)
+                    {
+                        var cara = kvCara.Value;
+                        if (cara == null) continue;
+                        cara.reflectX = reflX;
+                        cara.reflectY = reflY;
+                        cara.reflectZ = reflZ;
+                    }
+                    break;
+
+            }
+
+
+        }
+
+
+
 
 
     }

@@ -7,7 +7,7 @@ using OpenTK;
 using OpenTK.Graphics;
 
 namespace Grafica_PDesktop
-{
+{   [Serializable]
     class Partes
     {
         public Dictionary<String, Cara> listaDePoligonos;
@@ -74,13 +74,15 @@ namespace Grafica_PDesktop
 
         public void dibujarPoligono(Vector3 t, Vector3 r, Vector3 s)
         {
-            var tParte = t + new Vector3(centro.x, centro.y, centro.z);
+            var tParte = t + Cara.TransformOffset(new Vector3(centro.x, centro.y, centro.z), r, s);
             var rParte = r + rot;
             var sParte = new Vector3(s.X * scale.X, s.Y * scale.Y, s.Z * scale.Z);
 
             foreach (var cara in listaDePoligonos.Values)
                 cara.Dibujar(tParte, rParte, sParte);
         }
+
+
 
     }
 }

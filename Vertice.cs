@@ -4,8 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+
 namespace Grafica_PDesktop
-{
+{   [Serializable]
     class Vertice
     {
         public float x;

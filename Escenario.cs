@@ -6,13 +6,14 @@ using System.Threading.Tasks;
 using OpenTK;
 
 namespace Grafica_PDesktop
-{
+{   [Serializable]
     class Escenario
     {
         public Dictionary<String, Objeto> listaDeObjetos;
-        protected Vector3 centro;
+        public Vertice centro;
 
-        public Escenario(Vector3 centro)
+
+        public Escenario(Vertice centro)
         {
             this.listaDeObjetos = new Dictionary<String, Objeto>();
             this.centro = centro;
@@ -37,6 +38,23 @@ namespace Grafica_PDesktop
         {
             this.listaDeObjetos[nombre] = objeto;
         }
+        public void setCentro(float x, float y, float z) 
+        {
+            centro = new Vertice(x,y,z);   
+        }
+        public Vector3 CalcularCentroideObjetos()
+        {
+            if (listaDeObjetos.Count == 0) return Vector3.Zero;
+            float sx = 0, sy = 0, sz = 0;
+            foreach (var obj in listaDeObjetos.Values)
+            {
+                sx += obj.centro.x; sy += obj.centro.y; sz += obj.centro.z;
+            }
+            float n = listaDeObjetos.Count;
+            return new Vector3(sx / n, sy / n, sz / n);
+        }
+        public void setCentro(Vector3 p) => centro = new Vertice(p.X, p.Y, p.Z);
+        public Vertice getCentro() => centro;
 
         public void dibujar(Vector3 centro)
         {
@@ -49,9 +67,14 @@ namespace Grafica_PDesktop
 
         public void dibujar(Vector3 offset, Vector3 rot, Vector3 scale) 
         {
-            foreach (var objetoActual in this.listaDeObjetos.Values)
-                objetoActual.dibujarParte(offset,rot,scale);
-        
+            
+            var P = new Vector3(centro.x, centro.y, centro.z);
+            var rotSP = Cara.TransformOffset(P, rot, scale);
+            var tBase = offset + P - rotSP;
+
+            foreach (var obj in listaDeObjetos.Values)
+                obj.dibujarParte(tBase, rot, scale);
+
         }
 
 

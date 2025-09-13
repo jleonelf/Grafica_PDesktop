@@ -5,6 +5,7 @@ using OpenTK.Graphics;
 
 namespace Grafica_PDesktop
 {
+    [Serializable]
     class Objeto
     {
 
@@ -15,7 +16,7 @@ namespace Grafica_PDesktop
         public Vector3 rot = Vector3.Zero;   // grados (x,y,z)
         public Vector3 scale = Vector3.One;  // escala local (x,y,z)
 
-        //  public int timer = 0;
+        
         public Objeto()
         {
             this.listaDePartes = new Dictionary<String, Partes>();
@@ -70,14 +71,14 @@ namespace Grafica_PDesktop
 
         public void dibujarParte(Vector3 t, Vector3 r, Vector3 s)
         {
-            var tObj = t + new Vector3(centro.x, centro.y, centro.z);
+
+            var tObj = t + Cara.TransformOffset(new Vector3(centro.x, centro.y, centro.z), r, s);
             var rObj = r + rot;
             var sObj = new Vector3(s.X * scale.X, s.Y * scale.Y, s.Z * scale.Z);
 
-            foreach (var partes in listaDePartes.Values)
-                partes.dibujarPoligono(tObj, rObj, sObj);
+            foreach (var parte in listaDePartes.Values)
+                parte.dibujarPoligono(tObj, rObj, sObj);
         }
-
 
     }
 }
