@@ -11,6 +11,8 @@ namespace Grafica_PDesktop
 {
     class Cara
     {
+        //Punto == Vertice
+        float rotarEjeY;
 
         public List<Vertice> Vertices;
         public Color4 color;
