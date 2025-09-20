@@ -11,6 +11,12 @@ namespace Grafica_PDesktop
     class Cara
     {
         
+
+
+
+
+
+
         public List<Vertice> Vertices;
         public Color4 color;
         public Vertice centro;
